@@ -1,0 +1,23 @@
+version: '2'
+
+services:
+  crypto_alert_api:
+    image: crypto_alert_api
+    build: .
+    ports:
+      - 3030:3030
+    environment:
+      PORT: 3030
+      NODE_ENV: development
+      MONGODB_URI: mongodb://mongo:27017/
+    volumes: 
+      - .:/usr/src/app
+    depends_on:
+      - mongo
+    command: pm2-docker start index.ts --watch
+  mongo:
+    image: mongo
+    # volumes: 
+    #   - ~/docker/storage/loVR-mongo:/data/db
+    ports:
+      - 27017:27017

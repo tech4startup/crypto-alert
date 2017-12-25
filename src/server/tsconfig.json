@@ -1,0 +1,18 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"target": "es6",
+		"noImplicitAny": false,
+		"noUnusedLocals": true,
+		"noUnusedParameters": false,
+		"sourceMap": false,
+		"lib": ["es2015"]
+	},
+	"include": [
+		"./lib/*.ts",
+		"./models/*.ts",
+		"index.ts",
+		"./node_modules/@types/node/index.d.ts"
+	]
+}
