@@ -26,5 +26,8 @@ export async function getCurrentUser(req, res) {
 }
 
 export async function createUser(req, res, next) {
-	
+	let { name, email, password } = req.body;
+	let user = await User.create({ name, email, password });
+	req.auth = { id: user._id };
+	next();
 }

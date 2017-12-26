@@ -4,10 +4,16 @@ import * as cors from "cors";
 import * as mongoose from "mongoose";
 import * as passport from "passport";
 import * as expressJwt from "express-jwt";
+import * as NodeCache from "node-cache";
 
 import { generateToken, sendToken, secret } from "./lib/jwt";
-import { init as passportInit, getCurrentUser } from "./lib/passport";
-
+import {
+	init as passportInit,
+	getCurrentUser,
+	createUser
+} from "./lib/passport";
+import axios from "axios";
+import * as _ from "lodash";
 /**
  * Connect to MongoDB.
  */
@@ -66,13 +72,7 @@ router.post(
 	sendToken
 );
 
-router.post(
-	'/auth/local',
-	async function (req, res){
-		let { body: { name, email, password } } = req;
-		
-	}
-)
+router.post("/auth/local", createUser, generateToken, sendToken);
 
 //token handling middleware
 const authenticate = expressJwt({
@@ -88,11 +88,37 @@ const authenticate = expressJwt({
 
 router.get("/me", authenticate, getCurrentUser);
 
+const API_URL = "https://api.coinmarketcap.com/v1/ticker?limit=10";
+const myCache = new NodeCache({ stdTTL: 5 * 60, checkperiod: 60 });
+
+// Return tickers list
+router.get("/ticker", async function(req, res) {
+	let tickers = myCache.get("tickers");
+	if (tickers) return res.json(_.map(tickers, value => value.id));
+
+	let response = await axios.get(API_URL);
+	let { data } = response;
+	myCache.set("tickers", data);
+	tickers = _.map(data, value => value.id);
+	res.json(tickers);
+});
+
+// Return all data 
+router.get("/ticker/all", async function(req, res) {
+	let tickers = myCache.get("tickers");
+	if (tickers) return res.json(tickers);
+
+	let response = await axios.get(API_URL);
+	let { data } = response;
+	myCache.set("tickers", data);
+	res.json(data);
+});
+
 app.use("/api", router);
 app.use(function(err, req, res, next) {
 	if (err.name === "UnauthorizedError") {
 		res.status(401).send(err.message);
-	}
+	} else res.status(500).send(err.message);
 });
 
 app.listen(port);
